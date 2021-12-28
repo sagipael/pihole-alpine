@@ -1735,7 +1735,6 @@ installCron() {
 # Gravity is a very important script as it aggregates all of the domains into a single HOSTS formatted list,
 # which is what Pi-hole needs to begin blocking ads
 runGravity() {
-	installDefaultBlocklists
     # Run gravity in the current shell
     { /opt/pihole/gravity.sh --force ; }
 }
@@ -2780,16 +2779,15 @@ main() {
     printf "  %b Restarting services...\\n" "${INFO}"
     # Start services
 
-    # Enable FTL
+    # Download and compile the aggregated block list
+    runGravity
+	
+	# Enable FTL
     # Ensure the service is enabled before trying to start it
     # Fixes a problem reported on Ubuntu 18.04 where trying to start
     # the service before enabling causes installer to exit
     enable_service pihole-FTL
     restart_service pihole-FTL
-
-    # Download and compile the aggregated block list
-    runGravity
-	echo -e "\n done creating DB \n"
 
     # Force an update of the updatechecker
     /opt/pihole/updatecheck.sh
