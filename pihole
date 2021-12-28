@@ -365,7 +365,7 @@ tailFunc() {
   # Color blocklist/blacklist/wildcard entries as red
   # Color A/AAAA/DHCP strings as white
   # Color everything else as gray
-  tail -f /var/log/pihole.log | grep --line-buffered "${1}" | sed -E \
+  tail -f /var/log/pihole.log  | sed -E \
     -e "s,($(date +'%b %d ')| dnsmasq\[[0-9]*\]),,g" \
     -e "s,(.*(blacklisted |gravity blocked ).*),${COL_RED}&${COL_NC}," \
     -e "s,.*(query\\[A|DHCP).*,${COL_NC}&${COL_NC}," \
@@ -484,7 +484,7 @@ case "${1}" in
 esac
 
 # Must be root to use this tool
-if [[ ! $EUID -eq 0 ]];then
+if [[ ! $(id -u) -eq 0 ]];then
   if [[ -x "$(command -v sudo)" ]]; then
     exec sudo bash "$0" "$@"
     exit $?

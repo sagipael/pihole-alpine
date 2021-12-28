@@ -66,6 +66,13 @@ if ($serverName === "pi.hole"
         exit();
     }
     // If $landPage file was not present, Set Splash Page output
+	if(!isset($serverName)){
+		$serverName = 'Pi Hole';
+	}
+	if(!isset($viewPort)){
+		$viewPort = "";
+	}
+
     $splashPage = <<<EOT
     <!doctype html>
     <html lang='en'>
@@ -80,7 +87,7 @@ if ($serverName === "pi.hole"
             <div id="pihole_card">
               <img src='/admin/img/logo.svg' alt='Pi-hole logo' id="pihole_logo_splash" />
               <p>Pi-<strong>hole</strong>: Your black hole for Internet advertisements</p>
-              <a href='/admin'>Did you mean to go to the admin panel?</a>
+              <a href='/admin/'>Did you mean to go to the admin panel?</a>
             </div>
         </body>
     </html>

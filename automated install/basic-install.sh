@@ -68,7 +68,7 @@ webInterfaceGitUrl="https://github.com/pi-hole/AdminLTE.git"
 webInterfaceDir="${webroot}/admin"
 #piholeGitUrl="https://gitlab.com/yvelon/pi-hole.git"
 #piholeGitUrl="https://github.com/pi-hole/pi-hole.git"
-piholeGitUrl="-b dev https://github.com/sagipael/pihole-alpine.git"
+piholeGitUrl="https://github.com/sagipael/pihole-alpine.git"
 PI_HOLE_LOCAL_REPO="/etc/.pihole"
 # List of pihole scripts, stored in an array
 PI_HOLE_FILES=(chronometer list piholeDebug piholeLogFlush setupLCD update version gravity uninstall webpage)
