@@ -67,7 +67,8 @@ webroot="/var/www/html"
 webInterfaceGitUrl="https://github.com/pi-hole/AdminLTE.git"
 webInterfaceDir="${webroot}/admin"
 #piholeGitUrl="https://gitlab.com/yvelon/pi-hole.git"
-piholeGitUrl="https://github.com/pi-hole/pi-hole.git"
+#piholeGitUrl="https://github.com/pi-hole/pi-hole.git"
+piholeGitUrl="-b dev https://github.com/sagipael/pihole-alpine.git"
 PI_HOLE_LOCAL_REPO="/etc/.pihole"
 # List of pihole scripts, stored in an array
 PI_HOLE_FILES=(chronometer list piholeDebug piholeLogFlush setupLCD update version gravity uninstall webpage)
@@ -523,7 +524,7 @@ make_repo() {
         return 1
     fi
     # Clone the repo and return the return code from this command
-    git clone -q --depth 20 "${remoteRepo}" "${directory}" &> /dev/null || return $?
+    git clone -q --depth 20 ${remoteRepo} "${directory}" &> /dev/null || return $?
     # Move into the directory that was passed as an argument
     pushd "${directory}" &> /dev/null || return 1
     # Check current branch. If it is master, then reset to the latest available tag.
@@ -1759,7 +1760,8 @@ runGravity() {
 }
 
 runGravityNew() {
-	[-f ${PI_HOLE_CONFIG_DIR}/gravity.db ] && mv ${PI_HOLE_CONFIG_DIR}/gravity.db ${PI_HOLE_CONFIG_DIR}/gravity.db.bk
+	#[ -f ${PI_HOLE_CONFIG_DIR}/gravity.db ] || mv ${PI_HOLE_CONFIG_DIR}/gravity.db ${PI_HOLE_CONFIG_DIR}/gravity.db.bk
+	rm -f ${PI_HOLE_CONFIG_DIR}/gravity.db
 	sqlite3 ${PI_HOLE_CONFIG_DIR}/gravity.db < ${PI_HOLE_LOCAL_REPO}/advanced/Templates/gravity.db.sql
 	/opt/pihole/gravity.sh --force --recreate
 }
@@ -2209,12 +2211,12 @@ clone_or_update_repos() {
     else
         # so get git files for Core
         if ldd /bin/ls | grep -q "ld-musl-i386"; then
-            getGitFiles ${PI_HOLE_LOCAL_REPO} ${piholeGitUrl} || \
+            getGitFiles ${PI_HOLE_LOCAL_REPO} "${piholeGitUrl}" || \
             { printf "  %bUnable to clone %s into %s, unable to continue%b\\n" "${COL_LIGHT_RED}" "${piholeGitUrl}" "${PI_HOLE_LOCAL_REPO}" "${COL_NC}"; \
             exit 1; \
             }
         else
-            getGitFiles ${PI_HOLE_LOCAL_REPO} ${piholeGitUrl} || \
+            getGitFiles ${PI_HOLE_LOCAL_REPO} "${piholeGitUrl}" || \
             { printf "  %bUnable to clone %s into %s, unable to continue%b\\n" "${COL_LIGHT_RED}" "${piholeGitUrl}" "${PI_HOLE_LOCAL_REPO}" "${COL_NC}"; \
             exit 1; \
             }
@@ -2632,13 +2634,11 @@ function preInstall {
 	sed -i '/sha1sum/s/--check/-c/g'						${PI_HOLE_LOCAL_REPO}/gravity.sh
 	sed -i '/sha1sum/s/--strict//g'							${PI_HOLE_LOCAL_REPO}/gravity.sh
 	sed -i "s#^\s*check_url=.*#check_url=\$(echo \$url | awk -F '@' '{print \$1\$2}' )#g" ${PI_HOLE_LOCAL_REPO}/gravity.sh
-	sed -i 's/$EUID/id /g' 									${PI_HOLE_LOCAL_REPO}/pihole
+	sed -i 's/$EUID/$(id -u)/g' 									${PI_HOLE_LOCAL_REPO}/pihole
 	sed -i '/tail -f/s/| grep --line-buffered "${1}"//g'	${PI_HOLE_LOCAL_REPO}/pihole
 
 	sed -i "s/\/admin\'/\/admin\/\'/" ${PI_HOLE_LOCAL_REPO}/advanced/index.php
 	sed -i "s/Set Splash Page output/&\n\tif(!isset(\$serverName)){\n\t\t\$serverName = 'Pi Hole';\n\t}\n\tif(!isset(\$viewPort)){\n\t\t\$viewPort = \"\";\n\t}\n/"  ${PI_HOLE_LOCAL_REPO}/advanced/index.php
-	#sed -i 'd/    PIHOLE_SKIP_OS_CHECK=true/d' "$srcdir"/$PIHOLE_DIR/automated\ install/basic-install.sh
-	#sed -i 's/^os_check().*/&\n    PIHOLE_SKIP_OS_CHECK=true/g' "$srcdir"/$PIHOLE_DIR/automated\ install/basic-install.sh
 }
 
 function postInstall {
@@ -2661,7 +2661,7 @@ main() {
     printf "\\n"
 
     # If the user's id is zero,
-    if [[ "${EUID}" -eq 0 ]]; then
+    if [[ "$(id -u)" -eq 0 ]]; then
         # they are root and all is good
         printf "  %b %s\\n" "${TICK}" "${str}"
         # Show the Pi-hole logo so people know it's genuine since the logo and name are trademarked
@@ -2683,6 +2683,7 @@ main() {
             # when run via curl piping
             if [[ "$0" == "bash" ]]; then
                 # Download the install script and run it with admin rights
+				echo -e "\n#################################### sagi\n" 
                 exec curl -sSL https://raw.githubusercontent.com/pi-hole/pi-hole/master/automated%20install/basic-install.sh | sudo bash "$@"
             else
                 # when run via calling local bash script
