@@ -2214,11 +2214,7 @@ FTLinstall() {
             chown pihole:pihole "${pi_hole_config_dir}/macvendor.db"
 
             # Always replace pihole-FTL.service
-            if ! $run_busybox; then
-                install -T -m 0755 "${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole-FTL.service" "/etc/init.d/pihole-FTL"
-            else
-                install -m 0755 "${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole-FTL.service" "/etc/init.d/pihole-FTL"
-            fi
+			install -m 0755 "${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole-FTL.service" "/etc/init.d/pihole-FTL"
 
             # Stop pihole-FTL service if available
             stop_service pihole-FTL &> /dev/null
