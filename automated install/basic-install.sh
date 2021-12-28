@@ -2567,7 +2567,7 @@ copy_to_install_log() {
     chmod 644 "${installLogLoc}"
 }
 
-function postInstall {
+postInstall() {
 	sed -i 's/sudo/sudo -sn/g' ${webInterfaceDir}/scripts/pi-hole/php/gravity.sh.php
 	sed -i 's/sudo/sudo -sn/g' ${webInterfaceDir}/scripts/pi-hole/php/debug.php
 	sed -i 's/sudo/sudo -sn/g' ${webInterfaceDir}/scripts/pi-hole/php/queryads.php
