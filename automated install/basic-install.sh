@@ -1734,7 +1734,7 @@ installCron() {
 # which is what Pi-hole needs to begin blocking ads
 runGravity() {
     # Run gravity in the current shell
-    { /opt/pihole/gravity.sh --force; }
+    { /opt/pihole/gravity.sh --force -r recreate; }
 }
 
 # Check if the pihole user exists and create if it does not
@@ -2747,7 +2747,8 @@ main() {
     # Copy the temp log file into final log location for storage
     copy_to_install_log
 
-	postInstall # Sagi P				 
+	postInstall # Sagi P
+	
     if [[ "${INSTALL_WEB_INTERFACE}" == true ]]; then
         # Add password to web UI if there is none
         pw=""
