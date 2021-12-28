@@ -1735,8 +1735,9 @@ installCron() {
 # Gravity is a very important script as it aggregates all of the domains into a single HOSTS formatted list,
 # which is what Pi-hole needs to begin blocking ads
 runGravity() {
+	installDefaultBlocklists
     # Run gravity in the current shell
-    { /opt/pihole/gravity.sh --force -r recreate; }
+    { /opt/pihole/gravity.sh --force ; }
 }
 
 # Check if the pihole user exists and create if it does not
@@ -2792,6 +2793,7 @@ main() {
 
     # Download and compile the aggregated block list
     runGravity
+	echo -e "\n done creating DB \n"
 
     # Force an update of the updatechecker
     /opt/pihole/updatecheck.sh
