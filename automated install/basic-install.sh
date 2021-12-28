@@ -1719,17 +1719,37 @@ installPiholeWeb() {
 
 # Installs a cron file
 installCron() {
-    # Install the cron job
-    local str="Installing latest Cron script"
-    printf "\\n  %b %s..." "${INFO}" "${str}"
-    # Copy the cron file over from the local repo
-    # File must not be world or group writeable and must be owned by root
-    install -D -m 644 -o root -g root ${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole.cron /etc/cron.d/pihole
-    # Randomize gravity update time
-    sed -i "s/59 1 /$((1 + RANDOM % 58)) $((3 + RANDOM % 2))/" /etc/cron.d/pihole
-    # Randomize update checker time
-    sed -i "s/59 17/$((1 + RANDOM % 58)) $((12 + RANDOM % 8))/" /etc/cron.d/pihole
-    printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
+	if [[ "${detected_os^^}" =~ ALPINE } ]] ; then
+		local str="Installing latest Cron script"
+		printf "\\n  %b %s..." "${INFO}" "${str}"
+		crontab -l > /tmp/crontab
+		sed -i '/pihole/d' /tmp/crontab
+
+		echo "
+		# pihole: Flush the log daily at 00:00
+		00 00   * * *   pihole flush once quiet
+		05 00   * * *	/usr/sbin/logrotate /etc/pihole/logrotate
+
+		# pihole: delete query log from DB - Maximim 100,000 lines
+		00 01   * * * /opt/pihole/queryRotate.sh 100000 "  | sed 's/^\t\t//g' >> /tmp/crontab
+		
+		crontab /tmp/crontab
+		printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
+		
+	else
+
+		# Install the cron job
+		local str="Installing latest Cron script"
+		printf "\\n  %b %s..." "${INFO}" "${str}"
+		# Copy the cron file over from the local repo
+		# File must not be world or group writeable and must be owned by root
+		install -D -m 644 -o root -g root ${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole.cron /etc/cron.d/pihole
+		# Randomize gravity update time
+		sed -i "s/59 1 /$((1 + RANDOM % 58)) $((3 + RANDOM % 2))/" /etc/cron.d/pihole
+		# Randomize update checker time
+		sed -i "s/59 17/$((1 + RANDOM % 58)) $((12 + RANDOM % 8))/" /etc/cron.d/pihole
+		printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
+	fi
 }
 
 # Gravity is a very important script as it aggregates all of the domains into a single HOSTS formatted list,
