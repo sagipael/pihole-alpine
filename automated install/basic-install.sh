@@ -214,7 +214,8 @@ os_check() {
             if [ "${response}" == 0 ]; then
                 valid_response=false
             fi
-			response="$response Alpine=12,13"
+			response="$response Alpine=3"
+			
             IFS=" " read -r -a supportedOS < <(echo "${response}" | tr -d '"')
             for distro_and_versions in "${supportedOS[@]}"
             do
@@ -370,6 +371,7 @@ package_manager_detect() {
         UPDATE_PKG_CACHE="${PKG_MANAGER} update"
         PKG_INSTALL=("${PKG_MANAGER}" add)
         PKG_COUNT="${PKG_MANAGER} upgrade --simulate --no-progress | head -n -1 | wc -l"
+		OS_CHECK_DEPS=(grep bind-tools)
         INSTALLER_DEPS=(dialog git newt procps dhcpcd openrc ncurses)
         PIHOLE_DEPS=(curl bind-tools nmap-ncat psmisc sudo unzip wget libidn sqlite libcap openresolv logrotate bc lsof)
         PIHOLE_WEB_DEPS=(lighttpd lighttpd-mod_auth fcgi php7 php7-cgi php7-sqlite3 php7-session php7-openssl php7-json php-phar)
@@ -2608,7 +2610,7 @@ main() {
             # when run via curl piping
             if [[ "$0" == "bash" ]]; then
                 # Download the install script and run it with admin rights
-                exec curl -sSL https://raw.githubusercontent.com/pi-hole/pi-hole/master/automated%20install/basic-install.sh | sudo bash "$@"
+				exec curl -sSL https://raw.githubusercontent.com/sagipael/pihole-alpine/main/automated%20install/basic-install.sh | sudo bash "$@"
             else
                 # when run via calling local bash script
                 exec sudo bash "$0" "$@"
