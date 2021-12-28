@@ -2567,6 +2567,18 @@ copy_to_install_log() {
     chmod 644 "${installLogLoc}"
 }
 
+function postInstall {
+	sed -i 's/sudo/sudo -sn/g' ${webInterfaceDir}/scripts/pi-hole/php/gravity.sh.php
+	sed -i 's/sudo/sudo -sn/g' ${webInterfaceDir}/scripts/pi-hole/php/debug.php
+	sed -i 's/sudo/sudo -sn/g' ${webInterfaceDir}/scripts/pi-hole/php/queryads.php
+	sed -i 's/sudo/sudo -sn/g' ${webInterfaceDir}/scripts/pi-hole/php/func.php
+	sed -i 's/sudo/sudo -sn/g' ${webInterfaceDir}/scripts/pi-hole/php/savesettings.php
+	sed -i "/accepted_types = /s|);|, 'application/x-tgz'); // Sagi.P|g" ${webInterfaceDir}/scripts/pi-hole/php/teleporter.php
+	sed -i "/type.*mime_content_type/s|type =.*|type = 'application/x-tgz'; // Sagi.P|g" ${webInterfaceDir}/scripts/pi-hole/php/teleporter.php
+	#sed -i "s/\/admin\'/\/admin\/\'/" ${PI_HOLE_BLOCKPAGE_DIR}/index.php
+	#sed -i "s/Set Splash Page output/&\n\tif(!isset(\$serverName)){\n\t\t\$serverName = 'Pi Hole';\n\t}\n\tif(!isset(\$viewPort)){\n\t\t\$viewPort = \"\";\n\t}\n/"  ${PI_HOLE_BLOCKPAGE_DIR}/index.php
+}
+
 main() {
     ######## FIRST CHECK ########
     # Must be root to install
