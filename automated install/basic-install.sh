@@ -1763,7 +1763,7 @@ runGravityNew() {
 	#[ -f ${PI_HOLE_CONFIG_DIR}/gravity.db ] || mv ${PI_HOLE_CONFIG_DIR}/gravity.db ${PI_HOLE_CONFIG_DIR}/gravity.db.bk
 	rm -f ${PI_HOLE_CONFIG_DIR}/gravity.db
 	sqlite3 ${PI_HOLE_CONFIG_DIR}/gravity.db < ${PI_HOLE_LOCAL_REPO}/advanced/Templates/gravity.db.sql
-	/opt/pihole/gravity.sh --force --recreate
+	/opt/pihole/gravity.sh -f -r recreate
 }
 
 # Check if the pihole user exists and create if it does not
@@ -2633,7 +2633,7 @@ function preInstall {
 	sed -i '/sha1sum/s/--status/-s/g'						${PI_HOLE_LOCAL_REPO}/gravity.sh
 	sed -i '/sha1sum/s/--check/-c/g'						${PI_HOLE_LOCAL_REPO}/gravity.sh
 	sed -i '/sha1sum/s/--strict//g'							${PI_HOLE_LOCAL_REPO}/gravity.sh
-	sed -i "s#^\s*check_url=.*#check_url=\$(echo \$url | awk -F '@' '{print \$1\$2}' )#g" ${PI_HOLE_LOCAL_REPO}/gravity.sh
+	sed -i "s#check_url=.*#check_url=\$(echo \$url | awk -F '@' '{print \$1\$2}' )#g" ${PI_HOLE_LOCAL_REPO}/gravity.sh
 	sed -i 's/$EUID/$(id -u)/g' 									${PI_HOLE_LOCAL_REPO}/pihole
 	sed -i '/tail -f/s/| grep --line-buffered "${1}"//g'	${PI_HOLE_LOCAL_REPO}/pihole
 
