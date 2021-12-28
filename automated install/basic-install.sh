@@ -1719,7 +1719,19 @@ installPiholeWeb() {
 
 # Installs a cron file
 installCron() {
-	if [[ "${detected_os^^}" =~ ALPINE } ]] ; then
+	if ! $run_busybox; then
+		# Install the cron job
+		local str="Installing latest Cron script"
+		printf "\\n  %b %s..." "${INFO}" "${str}"
+		# Copy the cron file over from the local repo
+		# File must not be world or group writeable and must be owned by root
+		install -D -m 644 -o root -g root ${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole.cron /etc/cron.d/pihole
+		# Randomize gravity update time
+		sed -i "s/59 1 /$((1 + RANDOM % 58)) $((3 + RANDOM % 2))/" /etc/cron.d/pihole
+		# Randomize update checker time
+		sed -i "s/59 17/$((1 + RANDOM % 58)) $((12 + RANDOM % 8))/" /etc/cron.d/pihole
+		printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
+	else
 		local str="Installing latest Cron script"
 		printf "\\n  %b %s..." "${INFO}" "${str}"
 		crontab -l > /tmp/crontab
@@ -1734,20 +1746,6 @@ installCron() {
 		00 01   * * * /opt/pihole/queryRotate.sh 100000 "  | sed 's/^\t\t//g' >> /tmp/crontab
 		
 		crontab /tmp/crontab
-		printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
-		
-	else
-
-		# Install the cron job
-		local str="Installing latest Cron script"
-		printf "\\n  %b %s..." "${INFO}" "${str}"
-		# Copy the cron file over from the local repo
-		# File must not be world or group writeable and must be owned by root
-		install -D -m 644 -o root -g root ${PI_HOLE_LOCAL_REPO}/advanced/Templates/pihole.cron /etc/cron.d/pihole
-		# Randomize gravity update time
-		sed -i "s/59 1 /$((1 + RANDOM % 58)) $((3 + RANDOM % 2))/" /etc/cron.d/pihole
-		# Randomize update checker time
-		sed -i "s/59 17/$((1 + RANDOM % 58)) $((12 + RANDOM % 8))/" /etc/cron.d/pihole
 		printf "%b  %b %s\\n" "${OVER}" "${TICK}" "${str}"
 	fi
 }
