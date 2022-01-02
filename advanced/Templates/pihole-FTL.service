@@ -1,0 +1,86 @@
+#!/sbin/openrc-run
+command="/usr/bin/pihole-FTL"
+description="Launches the pihole-FTL service"
+command_user="pihole"
+pidfile="/run/pihole-FTL.pid"
+portfile="/run/pihole-FTL.port"
+
+pihole_FTL_log="/var/log/pihole-FTL.log"
+pihole_log="/var/log/pihole.log"
+
+
+depend() {
+	need net
+	need local
+	after local
+	#use logger
+	:
+
+}
+
+# Prepares before start service
+start_pre() {
+	## /opt/piholeConfig.sh -s 2> /dev/null
+	touch $pihole_FTL_log $pihole_log
+	touch $pidfile $portfile
+	touch /etc/pihole/dhcp.leases
+	
+	# Remove possible leftovers from previous pihole-FTL processes
+	rm -f /dev/shm/FTL-* 2> /dev/null
+	rm /run/pihole/FTL.sock 2> /dev/null
+	
+	
+	# Ensure that permissions are set so that pihole-FTL can edit all necessary files
+	chown pihole:pihole $pidfile $portfile
+	chown pihole:pihole /etc/pihole /etc/pihole/dhcp.leases 2> /dev/null
+	chown pihole:pihole $pihole_FTL_log $pihole_log
+	chmod 0644 $pihole_FTL_log $pidfile $portfile $pihole_log
+	
+	# Chown database files to the user FTL runs as. We ignore errors as the files may not (yet) exist
+	chown pihole:pihole /etc/pihole/pihole-FTL.db /etc/pihole/gravity.db 2> /dev/null
+	
+
+	## # update dns servers according to setupVars
+	## PIHOLE_DNS_1=$(cat /etc/pihole/setupVars.conf | grep ^PIHOLE_DNS_1 | awk -F '=' '{print $2}' | head -1)
+	## PIHOLE_DNS_2=$(cat /etc/pihole/setupVars.conf | grep ^PIHOLE_DNS_2 | awk -F '=' '{print $2}' | head -1)
+	## sed -i "/server=/d;/8.8.8.8/d" /etc/dnsmasq.d/01-pihole.conf
+	## 
+	## ### if PIHOLE_DNS_1 and PIHOLE_DNS_2 are empty - set 8.8.8.8 as DNS server
+	## if [[ -z "$PIHOLE_DNS_1" && -z "$PIHOLE_DNS_2" ]] ; then
+	## 	echo "server=8.8.8.8" >> /etc/dnsmasq.d/01-pihole.conf
+	## 	sed -i '/PIHOLE_DNS_1/d;/PIHOLE_DNS_2/d' /etc/dnsmasq.d/01-pihole.conf
+	## 	echo "PIHOLE_DNS_1=8.8.8.8" >> /etc/pihole/setupVars.conf
+	## 	echo "PIHOLE_DNS_2=8.8.8.8" >> /etc/pihole/setupVars.conf
+	## 	
+	## 	echo "server=8.8.8.8" >> /etc/dnsmasq.d/01-pihole.conf
+	## 
+	## # if PIHOLE_DNS_2 is empty and  PIHOLE_DNS_1 is not
+	## elif [[ ! -z "$PIHOLE_DNS_1" && -z "$PIHOLE_DNS_2" ]] ; then
+	## 	sed -i '/PIHOLE_DNS_2/d' /etc/pihole/setupVars.conf
+	## 	echo "server=$PIHOLE_DNS_1" >> /etc/dnsmasq.d/01-pihole.conf
+	## 
+	## # if PIHOLE_DNS_1 is empty and  PIHOLE_DNS_2 is not
+	## elif [[  -z "$PIHOLE_DNS_1" && ! -z "$PIHOLE_DNS_2" ]] ; then
+	## 	sed -i '/PIHOLE_DNS_1/d' /etc/pihole/setupVars.conf
+	## 	echo "server=$PIHOLE_DNS_2" >> /etc/dnsmasq.d/01-pihole.conf
+	## else
+	## 	echo "server=$PIHOLE_DNS_1" >> /etc/dnsmasq.d/01-pihole.conf
+	## 	echo "server=$PIHOLE_DNS_2" >> /etc/dnsmasq.d/01-pihole.conf
+	## fi
+	
+	ID=$(/usr/bin/sqlite3 /etc/pihole/gravity.db "select id FROM adlist;")
+	[ "$ID" ] || touch /var/www/html/pihole/emptylist
+	[ "$ID" ] || /usr/bin/sqlite3 /etc/pihole/gravity.db "INSERT INTO adlist (address,enabled,comment) VALUES ('http://127.0.0.1/emptylist', 1,'initial list');" 2> /dev/null
+	
+}
+
+# Start the service
+ start () {
+	if setcap CAP_NET_BIND_SERVICE,CAP_NET_RAW,CAP_NET_ADMIN,CAP_SYS_NICE+eip "$(which pihole-FTL)"; then
+		su -s /bin/sh -c "$command" "$command_user"
+	else
+		echo "Warning: Starting pihole-FTL as root because setting capabilities is not supported on this system"
+		pihole-FTL
+	fi
+ 
+ }
